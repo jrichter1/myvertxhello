@@ -11,42 +11,48 @@ import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 
 public class HttpApplication extends AbstractVerticle {
 
-  protected static final String template = "Bonjour, %s!";
+    protected static final String template = "Bonjour, %s!";
 
-  @Override
-  public void start(Future<Void> future) {
-    // Create a router object.
-    Router router = Router.router(vertx);
+    @Override
+    public void start(Future<Void> future) {
+        // Create a router object.
+        Router router = Router.router(vertx);
 
-    router.get("/api/greeting").handler(this::greeting);
-    router.get("/*").handler(StaticHandler.create());
+        router.get("/api/greeting").handler(this::greeting);
+        router.get("/api/goodbye").handler(this::goodbye);
+        router.get("/*").handler(StaticHandler.create());
 
-    // Create the HTTP server and pass the "accept" method to the request handler.
-    vertx
-        .createHttpServer()
-        .requestHandler(router::accept)
-        .listen(
-            // Retrieve the port from the configuration, default to 8080.
-            config().getInteger("http.port", 8080), ar -> {
-              if (ar.succeeded()) {
+        // Create the HTTP server and pass the "accept" method to the request handler.
+        vertx.createHttpServer().requestHandler(router::accept).listen(
+        // Retrieve the port from the configuration, default to 8080.
+        config().getInteger("http.port", 8080), ar -> {
+            if (ar.succeeded()) {
                 System.out.println("Server starter on port " + ar.result().actualPort());
-              }
-              future.handle(ar.mapEmpty());
-            });
+            }
+            future.handle(ar.mapEmpty());
+        });
 
-  }
-
-  private void greeting(RoutingContext rc) {
-    String name = rc.request().getParam("name");
-    if (name == null) {
-      name = "World";
     }
 
-    JsonObject response = new JsonObject()
-        .put("content", String.format(template, name));
+    private void goodbye(RoutingContext rc) {
+        String name = rc.request().getParam("name");
+        if (name == null) {
+            name = "World";
+        }
+        JsonObject response = new JsonObject().put("content", "Goodbye " + name);
 
-    rc.response()
-        .putHeader(CONTENT_TYPE, "application/json; charset=utf-8")
-        .end(response.encodePrettily());
-  }
+        rc.response().putHeader(CONTENT_TYPE, "application/json; charset=utf-8").end(response.encodePrettily());
+    }
+
+
+    private void greeting(RoutingContext rc) {
+        String name = rc.request().getParam("name");
+        if (name == null) {
+            name = "World";
+        }
+
+        JsonObject response = new JsonObject().put("content", String.format(template, name));
+
+        rc.response().putHeader(CONTENT_TYPE, "application/json; charset=utf-8").end(response.encodePrettily());
+    }
 }
